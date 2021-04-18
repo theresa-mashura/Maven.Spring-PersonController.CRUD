@@ -1,6 +1,9 @@
 package io.zipcoder.crudapp;
 
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,32 +19,38 @@ public class PersonController {
     }
 
     @RequestMapping(value = "/people", method = RequestMethod.POST)
-    public Person createPerson(@RequestBody Person p) {
-        return this.personRepository.save(p);
+    public ResponseEntity<Person> createPerson(@RequestBody Person p) {
+        return new ResponseEntity<>(this.personRepository.save(p), HttpStatus.CREATED);
     }
 
     @RequestMapping(value = "/people/{id}", method = RequestMethod.GET)
-    public Person getPerson(@PathVariable int id) {
-        return this.personRepository.findOne(id);
+    public ResponseEntity<Person> getPerson(@PathVariable int id) {
+        return new ResponseEntity<> (this.personRepository.findOne(id), HttpStatus.OK);
     }
 
     @RequestMapping(value = "/people", method = RequestMethod.GET)
-    public Iterable<Person> getPersonList() {
-        return this.personRepository.findAll();
+    public ResponseEntity<Iterable<Person>> getPersonList() {
+        return new ResponseEntity<> (this.personRepository.findAll(), HttpStatus.OK);
     }
 
     @RequestMapping(value = "/people/", method = RequestMethod.PUT)
-    public Person updatePerson(@RequestBody Person p) {
+    public ResponseEntity<Person> updatePerson(@RequestBody Person p) {
         int id = p.getId();
-        Person originalPerson = this.personRepository.findOne(id);
-        originalPerson.setFirstName(p.getFirstName());
-        originalPerson.setLastName(p.getLastName());
-        return this.personRepository.save(originalPerson);
+        if (this.personRepository.findOne(id) != null){
+            Person originalPerson = this.personRepository.findOne(id);
+            originalPerson.setFirstName(p.getFirstName());
+            originalPerson.setLastName(p.getLastName());
+            return new ResponseEntity<>(this.personRepository.save(originalPerson), HttpStatus.OK);
+        } else {
+            this.createPerson(p);
+        }
+        return null;
     }
 
     @RequestMapping(value = "/people/{id}", method = RequestMethod.DELETE)
-    public void DeletePerson(@PathVariable int id) {
+    public ResponseEntity DeletePerson(@PathVariable int id) {
         this.personRepository.delete(id);
+        return new ResponseEntity<> (HttpStatus.NO_CONTENT);
     }
 
 
